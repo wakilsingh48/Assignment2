@@ -1,0 +1,105 @@
+//Happy Birds//
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.util.ArrayList;
+import java.util.Random;
+
+public class BirdGame extends JFrame {
+    private static final int FRAME_WIDTH = 800;
+    private static final int FRAME_HEIGHT = 600;
+    private static final int BIRD_WIDTH = 50;
+    private static final int BIRD_HEIGHT = 50;
+    private static final int BREAD_WIDTH = 30;
+    private static final int BREAD_HEIGHT = 30;
+    private static final int BREAD_SPEED = 5;
+
+    private ArrayList<Point> birds;
+    private Point bread;
+    private int happyPoints;
+
+    public BirdGame() {
+        setTitle("Bird Game");
+        setSize(FRAME_WIDTH, FRAME_HEIGHT);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        birds = new ArrayList<>();
+        bread = new Point(FRAME_WIDTH / 2, FRAME_HEIGHT - BREAD_HEIGHT);
+        happyPoints = 0;
+
+        // Add mouse motion listener to control bread movement
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                moveBread(e.getX());
+            }
+        });
+
+        // Start a timer to spawn birds periodically
+        Timer timer = new Timer(2000, e -> spawnBird());
+        timer.start();
+
+        // Start a timer to check for collisions and update happy points
+        Timer collisionTimer = new Timer(50, e -> checkCollisions());
+        collisionTimer.start();
+    }
+
+    private void spawnBird() {
+        Random random = new Random();
+        int x = random.nextInt(FRAME_WIDTH - BIRD_WIDTH);
+        int y = random.nextInt(FRAME_HEIGHT / 2 - BIRD_HEIGHT);
+        birds.add(new Point(x, y));
+        repaint();
+    }
+
+    private void moveBread(int x) {
+        bread.x = x;
+        repaint();
+    }
+
+    private void checkCollisions() {
+        Rectangle breadRect = new Rectangle(bread.x, bread.y, BREAD_WIDTH, BREAD_HEIGHT);
+        ArrayList<Point> birdsToRemove = new ArrayList<>();
+
+        for (Point bird : birds) {
+            Rectangle birdRect = new Rectangle(bird.x, bird.y, BIRD_WIDTH, BIRD_HEIGHT);
+            if (breadRect.intersects(birdRect)) {
+                birdsToRemove.add(bird);
+                happyPoints++;
+            }
+        }
+
+        birds.removeAll(birdsToRemove);
+        repaint();
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+        g.setColor(Color.BLUE);
+
+        // Draw birds
+        for (Point bird : birds) {
+            g.fillRect(bird.x, bird.y, BIRD_WIDTH, BIRD_HEIGHT);
+        }
+
+        // Draw bread bucket
+        g.setColor(Color.ORANGE);
+        g.fillRect(bread.x, bread.y, BREAD_WIDTH, BREAD_HEIGHT);
+
+        // Draw happy points
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("Arial", Font.PLAIN, 20));
+        g.drawString("Happy Points: " + happyPoints, 10, 30);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            BirdGame game = new BirdGame();
+            game.setVisible(true);
+        });
+    }
+}
